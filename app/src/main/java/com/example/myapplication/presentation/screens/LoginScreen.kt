@@ -48,7 +48,7 @@ fun LoginScreen(navController: NavController, type: String) { // 🔹 navControl
         Button(
             onClick = {
                 println("Giriş yapıldı: $email / $password [type=$type]")
-                navController.navigate("survey") // 🔹 yönlendirme artık çalışır
+
                 navController.navigate("survey_step/1")
 
             },
