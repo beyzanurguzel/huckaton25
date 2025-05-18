@@ -12,7 +12,7 @@ import com.example.myapplication.presentation.viewmodel.SurveyViewModel
 @Composable
 fun SurveyResultScreen(
     navController: NavController,
-    viewModel: SurveyViewModel // 🔹 dışarıdan geldi
+    viewModel: SurveyViewModel
 ) {
     val score = viewModel.calculateScore()
 
@@ -24,15 +24,15 @@ fun SurveyResultScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Anket Tamamlandı!", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(16.dp))
         Text("Toplam Puanınız: $score", style = MaterialTheme.typography.titleLarge)
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(Modifier.height(32.dp))
 
         Button(onClick = {
-            navController.navigate("avatar")
+            navController.navigate("character")
         }) {
-            Text("Devam Et")
+            Text("Karakteri Gör")
         }
     }
 }

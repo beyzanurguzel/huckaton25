@@ -1,43 +1,74 @@
 package com.example.myapplication.presentation.viewmodel
 
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.ViewModel
-import com.example.myapplication.data.surveyQuestions
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
+
+/**
+ * Kullanıcının anket cevaplarını tutar, cevap kaydeder ve puan hesaplar.
+ */
 class SurveyViewModel : ViewModel() {
 
-    // Her sorunun cevabını burada tut
-    val answers = mutableStateMapOf<Int, List<String>>() // multi/single fark etmiyor, hep liste
+    // ❶ Cevapları saklayacağımız map
+    private val _answers = mutableMapOf<Int, List<String>>()
 
-    // Cevap ekleme
-    fun saveAnswer(questionId: Int, selected: List<String>) {
-        answers[questionId] = selected
+    /** Cevap haritasını salt-okunur olarak dışarıya açıyoruz */
+    val answers: Map<Int, List<String>>
+        get() = _answers
+
+    // ❷ Reaktif puan akışı
+    private val _score = MutableStateFlow(0)
+    val score: StateFlow<Int> = _score.asStateFlow()
+
+    /**
+     * Bu fonksiyon çağrıldığında, verilen soruya ait cevap listesini kaydeder
+     * ve hemen ardından toplam puanı yeniden hesaplar.
+     */
+    fun saveAnswer(questionId: Int, selectedAnswers: List<String>) {
+        _answers[questionId] = selectedAnswers
+        calculateScore()
     }
 
-    // Toplam puanı hesapla
+    /**
+     * _answers içindekileri puanlayıp hem StateFlow'a yazar hem de döndürür.
+     *
+     * @return Hesaplanan toplam puan
+     */
     fun calculateScore(): Int {
-        var score = 0
+        var total = 0
 
-        for ((id, selected) in answers) {
-            val q = surveyQuestions.find { it.id == id } ?: continue
-
-            selected.forEach {
-                score += when (it.lowercase()) {
-                    "led ampul" -> 10
-                    "tasarruflu beyaz eşyalar" -> 10
-                    "gereksiz ışıkları kapatma" -> 10
-                    "toplu taşıma" -> 10
-                    "bisiklet / scooter" -> 10
-                    "evet, düzenli" -> 10
-                    "kağıt / karton", "plastik", "cam", "metal" -> 5
-                    "5 dakikadan az" -> 10
+        for ((_, selectedList) in _answers) {
+            for (answer in selectedList) {
+                total += when (answer.lowercase()) {
+                    // 10 puanlık iyi alışkanlıklar
+                    "led ampul",
+                    "tasarruflu beyaz eşyalar",
+                    "gereksiz ışıkları kapatma",
+                    "toplu taşıma",
+                    "bisiklet / scooter",
+                    "evet, düzenli",
+                    "5 dakikadan az",
                     "hayır, dikkat ederim" -> 10
+
+                    // 5 puanlık geri dönüşüm seçenekleri
+                    "kağıt / karton",
+                    "plastik",
+                    "cam",
+                    "metal" -> 5
+
+                    // Genel “evet” cevabı
                     "evet" -> 5
+
                     else -> 0
                 }
             }
         }
 
-        return score
+        // ❸ Hesaplanan puanı StateFlow’a yaz
+        _score.value = total
+        return total
     }
 }
+
